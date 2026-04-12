@@ -1,8 +1,6 @@
 services:
   frontend:
-    build:
-      context: .
-      dockerfile: frontend/Dockerfile
+    image: finova-fe:latest
     env_file:
       - .env
     environment:
@@ -12,11 +10,11 @@ services:
     depends_on:
       backend:
         condition: service_started
+    networks:
+      - finova-network
 
   backend:
-    build:
-      context: .
-      dockerfile: backend/Dockerfile
+    image: finova-be:latest
     env_file:
       - .env
     environment:
@@ -51,6 +49,8 @@ services:
         condition: service_started
       minio-init:
         condition: service_completed_successfully
+    networks:
+      - finova-network
 
   postgres:
     image: postgres:16-alpine
@@ -67,6 +67,8 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    networks:
+      - finova-network
 
   minio:
     image: minio/minio:latest
@@ -84,6 +86,8 @@ services:
       retries: 3
     volumes:
       - minio_data:/data
+    networks:
+      - finova-network
 
   minio-init:
     image: minio/mc:latest
@@ -97,7 +101,40 @@ services:
       done &&
       mc mb --ignore-existing local/loan-docs
       "
+    networks:
+      - finova-network
+
+  npm:
+    image: jc21/nginx-proxy-manager
+    restart: unless-stopped
+    expose:
+      - "81"
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./data:/data
+      - ./letsencrypt:/etc/letsencrypt
+    networks:
+      - finova-network
+  
+  dockhand:
+    image: fnsys/dockhand:latest
+    container_name: dockhand
+    restart: unless-stopped
+    ports:
+      - 3000:3000
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - dockhand_data:/app/data
+    networks:
+      - finova-network
 
 volumes:
   postgres_data:
   minio_data:
+  dockhand_data:
+
+networks:
+  finova-network:
+    driver: bridge
