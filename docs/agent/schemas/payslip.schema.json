@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Payslip Extraction Schema",
+  "purpose": "Machine-readable contract for payslip extraction output.",
+  "load_when": [
+    "Load when working on classification, extraction prompts, parser validation, or review UI rendering for payslip."
+  ],
+  "depends_on": [
+    "../06-data-model.md",
+    "../09-classification-extraction.md"
+  ],
+  "source_of_truth": true,
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "document_type",
+    "employee_name",
+    "employer_name",
+    "pay_period",
+    "gross_salary",
+    "net_salary"
+  ],
+  "properties": {
+    "document_type": {
+      "const": "payslip"
+    },
+    "employee_name": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "employer_name": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "pay_period": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "gross_salary": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "net_salary": {
+      "type": [
+        "number",
+        "null"
+      ]
+    }
+  }
+}

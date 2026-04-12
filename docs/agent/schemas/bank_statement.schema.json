@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Bank Statement Extraction Schema",
+  "purpose": "Machine-readable contract for bank_statement extraction output.",
+  "load_when": [
+    "Load when working on classification, extraction prompts, parser validation, or review UI rendering for bank_statement."
+  ],
+  "depends_on": [
+    "../06-data-model.md",
+    "../09-classification-extraction.md"
+  ],
+  "source_of_truth": true,
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "document_type",
+    "account_holder",
+    "bank_name",
+    "account_number",
+    "statement_period",
+    "ending_balance"
+  ],
+  "properties": {
+    "document_type": {
+      "const": "bank_statement"
+    },
+    "account_holder": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "bank_name": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "account_number": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "statement_period": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "ending_balance": {
+      "type": [
+        "number",
+        "null"
+      ]
+    }
+  }
+}

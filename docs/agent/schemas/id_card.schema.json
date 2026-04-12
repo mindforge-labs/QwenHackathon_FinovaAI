@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ID Card Extraction Schema",
+  "purpose": "Machine-readable contract for id_card extraction output.",
+  "load_when": [
+    "Load when working on classification, extraction prompts, parser validation, or review UI rendering for id_card."
+  ],
+  "depends_on": [
+    "../06-data-model.md",
+    "../09-classification-extraction.md"
+  ],
+  "source_of_truth": true,
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "document_type",
+    "full_name",
+    "dob",
+    "id_number",
+    "address",
+    "issue_date"
+  ],
+  "properties": {
+    "document_type": {
+      "const": "id_card"
+    },
+    "full_name": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "dob": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Date string extracted from the document and normalized after parsing."
+    },
+    "id_number": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "address": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "issue_date": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Date string extracted from the document and normalized after parsing."
+    }
+  }
+}
