@@ -5,13 +5,13 @@ load_when:
   - Load for frontend visual design, layout, or interaction changes.
   - Do not load by default for backend, OCR, API, storage, or validation tasks.
 depends_on:
-  - ../ai/05-frontend-review-ui.md
+  - ../agent/05-frontend-review-ui.md
 source_of_truth: true
 ---
 
 # Frontend Design System
 
-Use this together with [../ai/05-frontend-review-ui.md](../ai/05-frontend-review-ui.md) for frontend review flows. Do not load it by default for backend, OCR, API, storage, or validation tasks.
+Use this together with [../agent/05-frontend-review-ui.md](../agent/05-frontend-review-ui.md) for frontend review flows. Do not load it by default for backend, OCR, API, storage, or validation tasks.
 
 ## 1. Visual Theme & Atmosphere
 
