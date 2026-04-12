@@ -1,12 +1,13 @@
-FROM node:22-alpine
+FROM oven/bun:1
 
 WORKDIR /app
 
-COPY frontend/package.json frontend/package-lock.json* ./
-RUN npm install
+COPY frontend/package.json frontend/bun.lockb* ./
+
+RUN bun install
 
 COPY frontend ./
 
 EXPOSE 3000
 
-CMD ["npm", "run", "dev"]
+CMD ["bun", "run", "dev"]
