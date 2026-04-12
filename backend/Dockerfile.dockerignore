@@ -1,0 +1,33 @@
+.git
+.gitignore
+.codex
+.env
+frontend
+samples
+scripts
+roadmap.md
+README.md
+docker-compose.yml
+docker-compose-prod.yml
+docker-compose-deploy-prod.yml
+
+# Backend local caches and artifacts
+backend/__pycache__
+backend/**/*.pyc
+backend/**/*.pyo
+backend/.pytest_cache
+backend/.mypy_cache
+backend/.ruff_cache
+backend/.coverage
+backend/htmlcov
+backend/.venv
+backend/venv
+backend/*.db
+backend/*.sqlite
+backend/*.sqlite3
+backend/storage
+
+# Keep only the backend AI docs that are copied into the image.
+docs/*
+!docs/agent/
+!docs/agent/**

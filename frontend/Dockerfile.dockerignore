@@ -1,0 +1,25 @@
+.git
+.gitignore
+.codex
+.env
+backend
+docs
+samples
+scripts
+roadmap.md
+README.md
+docker-compose.yml
+docker-compose-prod.yml
+docker-compose-deploy-prod.yml
+
+# Frontend dependency and build caches
+frontend/node_modules
+frontend/.next
+frontend/dist
+frontend/.turbo
+frontend/coverage
+frontend/.cache
+frontend/npm-debug.log
+frontend/yarn-debug.log
+frontend/yarn-error.log
+frontend/pnpm-debug.log
