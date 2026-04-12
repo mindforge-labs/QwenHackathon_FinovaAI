@@ -10,17 +10,23 @@ from app.api.documents import router as documents_router
 from app.api.health import router as health_router
 from app.core.config import get_settings
 from app.core.db import init_db
+from app.core.logging import configure_logging
+from app.middleware.request_size import RequestSizeLimitMiddleware
 
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
-    init_db()
+    settings = get_settings()
+    if settings.auto_init_db:
+        init_db()
     yield
 
 
 def create_app() -> FastAPI:
     settings = get_settings()
+    configure_logging(settings)
     app = FastAPI(title=settings.app_name, debug=settings.debug, lifespan=lifespan)
+    app.add_middleware(RequestSizeLimitMiddleware)
     app.add_middleware(
         CORSMiddleware,
         allow_origins=list(settings.cors_origins),

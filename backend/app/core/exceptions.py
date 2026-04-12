@@ -24,3 +24,11 @@ class DocumentPageNotFoundError(Exception):
 
 class ProcessingFailureError(Exception):
     """Raised when the processing pipeline cannot complete."""
+
+
+class ConfigurationError(Exception):
+    """Raised when the application configuration is unsafe or incomplete."""
+
+
+class RequestTooLargeError(Exception):
+    """Raised when an incoming request or upload exceeds configured size limits."""

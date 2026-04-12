@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 
 from app.core.db import get_db
 from app.core.exceptions import ApplicationNotFoundError
+from app.core.security import require_api_key
 from app.schemas.application import (
     ApplicationCreateRequest,
     ApplicationDetail,
@@ -11,7 +12,11 @@ from app.schemas.application import (
 )
 from app.services.application_service import ApplicationService
 
-router = APIRouter(prefix="/applications", tags=["applications"])
+router = APIRouter(
+    prefix="/applications",
+    tags=["applications"],
+    dependencies=[Depends(require_api_key)],
+)
 
 
 @router.post("", response_model=ApplicationSummary, status_code=status.HTTP_201_CREATED)

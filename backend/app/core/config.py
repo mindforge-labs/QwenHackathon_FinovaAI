@@ -4,13 +4,18 @@ import os
 from dataclasses import dataclass
 from functools import lru_cache
 
+from app.core.exceptions import ConfigurationError
+
 TRUE_VALUES = {"1", "true", "yes", "on"}
+PRODUCTION_VALUES = {"prod", "production"}
 
 
 @dataclass(frozen=True, slots=True)
 class Settings:
     app_name: str
+    app_env: str
     debug: bool
+    auto_init_db: bool
     database_url: str
     storage_backend: str
     filesystem_storage_root: str
@@ -28,6 +33,16 @@ class Settings:
     llm_model: str
     llm_timeout_seconds: float
     cors_origins: tuple[str, ...]
+    auth_enabled: bool
+    api_key: str
+    log_level: str
+    log_json: bool
+    max_request_size_bytes: int
+    max_upload_size_bytes: int
+
+    @property
+    def is_production(self) -> bool:
+        return self.app_env.lower() in PRODUCTION_VALUES
 
     @property
     def minio_url(self) -> str:
@@ -37,9 +52,11 @@ class Settings:
 
 @lru_cache
 def get_settings() -> Settings:
-    return Settings(
+    settings = Settings(
         app_name=os.getenv("APP_NAME", "Finova AI Backend"),
+        app_env=os.getenv("APP_ENV", "development"),
         debug=os.getenv("DEBUG", "false").lower() in TRUE_VALUES,
+        auto_init_db=os.getenv("AUTO_INIT_DB", "true").lower() in TRUE_VALUES,
         database_url=os.getenv("DATABASE_URL", "sqlite:///./finova.db"),
         storage_backend=os.getenv("STORAGE_BACKEND", "filesystem"),
         filesystem_storage_root=os.getenv("FILESYSTEM_STORAGE_ROOT", "./storage"),
@@ -64,7 +81,50 @@ def get_settings() -> Settings:
             ).split(",")
             if origin.strip()
         ),
+        auth_enabled=os.getenv("AUTH_ENABLED", "false").lower() in TRUE_VALUES,
+        api_key=os.getenv("API_KEY", ""),
+        log_level=os.getenv("LOG_LEVEL", "INFO"),
+        log_json=os.getenv("LOG_JSON", "true").lower() in TRUE_VALUES,
+        max_request_size_bytes=int(os.getenv("MAX_REQUEST_SIZE_BYTES", str(10 * 1024 * 1024))),
+        max_upload_size_bytes=int(os.getenv("MAX_UPLOAD_SIZE_BYTES", str(8 * 1024 * 1024))),
     )
+    validate_settings(settings)
+    return settings
+
+
+def validate_settings(settings: Settings) -> None:
+    if settings.auth_enabled and not settings.api_key.strip():
+        raise ConfigurationError("AUTH_ENABLED is true but API_KEY is empty.")
+    if settings.max_request_size_bytes <= 0:
+        raise ConfigurationError("MAX_REQUEST_SIZE_BYTES must be greater than zero.")
+    if settings.max_upload_size_bytes <= 0:
+        raise ConfigurationError("MAX_UPLOAD_SIZE_BYTES must be greater than zero.")
+    if settings.max_upload_size_bytes > settings.max_request_size_bytes:
+        raise ConfigurationError(
+            "MAX_UPLOAD_SIZE_BYTES cannot be greater than MAX_REQUEST_SIZE_BYTES."
+        )
+
+    if settings.llm_enabled and not settings.llm_model.strip():
+        raise ConfigurationError("LLM_ENABLED is true but LLM_MODEL is empty.")
+
+    if settings.llm_enabled and not settings.llm_base_url.strip():
+        raise ConfigurationError("LLM_ENABLED is true but LLM_BASE_URL is empty.")
+
+    if not settings.is_production:
+        return
+
+    if settings.debug:
+        raise ConfigurationError("Production configuration cannot enable DEBUG.")
+    if settings.auto_init_db:
+        raise ConfigurationError("Production configuration must disable AUTO_INIT_DB.")
+    if settings.database_url == "sqlite:///./finova.db":
+        raise ConfigurationError("Production configuration cannot use the default SQLite database.")
+    if settings.storage_backend != "minio":
+        raise ConfigurationError("Production configuration must use STORAGE_BACKEND=minio.")
+    if not settings.auth_enabled:
+        raise ConfigurationError("Production configuration must enable API key authentication.")
+    if settings.minio_access_key == "minioadmin" or settings.minio_secret_key == "minioadmin":
+        raise ConfigurationError("Production configuration cannot use default MinIO credentials.")
 
 
 def clear_settings_cache() -> None:

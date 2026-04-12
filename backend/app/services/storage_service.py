@@ -77,6 +77,24 @@ class StorageService:
 
         raise StorageFailureError(f"Unsupported storage backend '{self.settings.storage_backend}'.")
 
+    def check_connection(self) -> None:
+        if self.settings.storage_backend == "filesystem":
+            target_root = self._filesystem_target("")
+            target_root.mkdir(parents=True, exist_ok=True)
+            if not target_root.exists() or not target_root.is_dir():
+                raise StorageFailureError("Filesystem storage root is not available.")
+            return
+
+        if self.settings.storage_backend == "minio":
+            try:
+                client = build_s3_client(self.settings)
+                ensure_bucket(client, self.settings.minio_bucket_name)
+            except Exception as exc:
+                raise StorageFailureError("Could not connect to the MinIO storage backend.") from exc
+            return
+
+        raise StorageFailureError(f"Unsupported storage backend '{self.settings.storage_backend}'.")
+
     def _store_to_filesystem(self, *, storage_key: str, data: bytes) -> None:
         target = self._filesystem_target(storage_key)
         target.parent.mkdir(parents=True, exist_ok=True)

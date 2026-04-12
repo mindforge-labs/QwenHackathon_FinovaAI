@@ -9,9 +9,11 @@ from app.core.exceptions import (
     DocumentPageNotFoundError,
     EmptyFileError,
     ProcessingFailureError,
+    RequestTooLargeError,
     StorageFailureError,
     UnsupportedFileTypeError,
 )
+from app.core.security import require_api_key
 from app.schemas.document import (
     DocumentDetail,
     DocumentPagesResponse,
@@ -28,7 +30,10 @@ from app.services.pipeline_service import PipelineService
 from app.services.review_service import ReviewService
 from app.services.upload_service import UploadService
 
-router = APIRouter(tags=["documents"])
+router = APIRouter(
+    tags=["documents"],
+    dependencies=[Depends(require_api_key)],
+)
 
 
 @router.post(
@@ -49,6 +54,8 @@ async def upload_document(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
     except EmptyFileError as exc:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
+    except RequestTooLargeError as exc:
+        raise HTTPException(status_code=status.HTTP_413_CONTENT_TOO_LARGE, detail=str(exc)) from exc
     except UnsupportedFileTypeError as exc:
         raise HTTPException(
             status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,

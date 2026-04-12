@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import logging
+
 from sqlalchemy.orm import Session
 
 from app.core.exceptions import (
@@ -29,6 +31,8 @@ from app.services.pdf_service import PDFService
 from app.services.preprocess_service import PreprocessService
 from app.services.storage_service import StorageService
 from app.services.validation_service import ValidationService
+
+logger = logging.getLogger(__name__)
 
 
 class PipelineService:
@@ -61,6 +65,15 @@ class PipelineService:
         if document is None:
             raise DocumentNotFoundError(f"Document '{document_id}' was not found.")
 
+        logger.info(
+            "document processing started",
+            extra={
+                "event": "document_processing_started",
+                "document_id": document.id,
+                "application_id": document.application_id,
+                "mime_type": document.mime_type,
+            },
+        )
         self.document_repository.update_status(document, status=DocumentStatus.PROCESSING.value)
 
         try:
@@ -113,6 +126,16 @@ class PipelineService:
                 pages=page_records,
             )
             aggregated_ocr_text = "\n".join(page.get("text", "") for page in ocr_artifact_pages).strip()
+            logger.info(
+                "ocr completed",
+                extra={
+                    "event": "document_ocr_completed",
+                    "document_id": document.id,
+                    "application_id": document.application_id,
+                    "page_count": len(page_records),
+                    "ocr_confidence": self._aggregate_document_ocr_confidence(ocr_artifact_pages),
+                },
+            )
             classification = self.classification_service.classify(aggregated_ocr_text)
             document.ocr_confidence = self._aggregate_document_ocr_confidence(ocr_artifact_pages)
             document.document_type = classification.document_type
@@ -123,6 +146,15 @@ class PipelineService:
 
             self.extracted_field_repository.delete_for_document(document.id)
             if classification.document_type != "unknown" and aggregated_ocr_text:
+                logger.info(
+                    "extraction started",
+                    extra={
+                        "event": "document_extraction_started",
+                        "document_id": document.id,
+                        "application_id": document.application_id,
+                        "document_type": classification.document_type,
+                    },
+                )
                 extraction_result = self.extraction_service.extract(
                     document_type=classification.document_type,
                     ocr_text=aggregated_ocr_text,
@@ -154,6 +186,18 @@ class PipelineService:
                     llm_attempt_count=extraction_result.llm_attempt_count,
                     fallback_used=extraction_result.fallback_used,
                 )
+                logger.info(
+                    "extraction completed",
+                    extra={
+                        "event": "document_extraction_completed",
+                        "document_id": document.id,
+                        "application_id": document.application_id,
+                        "document_type": classification.document_type,
+                        "extraction_source": extraction_result.source,
+                        "extraction_confidence": extraction_confidence,
+                        "fallback_used": extraction_result.fallback_used,
+                    },
+                )
 
             document.extraction_confidence = extraction_confidence
             flags = self.validation_service.build_processing_flags(
@@ -184,6 +228,17 @@ class PipelineService:
                 document_id=document.id,
                 flags=flags,
             )
+            logger.info(
+                "validation completed",
+                extra={
+                    "event": "document_validation_completed",
+                    "document_id": document.id,
+                    "application_id": document.application_id,
+                    "document_type": classification.document_type,
+                    "validation_flag_count": len(flags),
+                    "status": document.status,
+                },
+            )
             self._refresh_cross_document_validation(document.application_id)
             self._store_ocr_artifact(
                 application_id=document.application_id,
@@ -192,6 +247,13 @@ class PipelineService:
                 ocr_confidence=document.ocr_confidence,
             )
         except ProcessingFailureError:
+            logger.exception(
+                "document processing failed",
+                extra={
+                    "event": "document_processing_failed",
+                    "document_id": document_id,
+                },
+            )
             self.db.rollback()
             self.document_repository.update_status_by_id(
                 document_id,
@@ -199,6 +261,13 @@ class PipelineService:
             )
             raise
         except Exception as exc:
+            logger.exception(
+                "document processing failed unexpectedly",
+                extra={
+                    "event": "document_processing_failed_unexpected",
+                    "document_id": document_id,
+                },
+            )
             self.db.rollback()
             self.document_repository.update_status_by_id(
                 document_id,
@@ -206,6 +275,17 @@ class PipelineService:
             )
             raise ProcessingFailureError("Document processing failed unexpectedly.") from exc
 
+        logger.info(
+            "document processing completed",
+            extra={
+                "event": "document_processing_completed",
+                "document_id": document.id,
+                "application_id": document.application_id,
+                "page_count": len(page_records),
+                "status": document.status,
+                "document_type": document.document_type,
+            },
+        )
         return DocumentProcessResponse(
             document_id=document.id,
             processing_status=DocumentStatus(document.status),

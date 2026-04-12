@@ -3,7 +3,7 @@ from __future__ import annotations
 from functools import lru_cache
 from typing import AsyncGenerator
 
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
 
@@ -51,14 +51,22 @@ async def get_db() -> AsyncGenerator[Session, None]:
 
 
 def init_db() -> None:
+    register_models()
+    Base.metadata.create_all(bind=get_engine())
+
+
+def check_database_connection() -> None:
+    with get_engine().connect() as connection:
+        connection.execute(text("SELECT 1"))
+
+
+def register_models() -> None:
     import app.models.application  # noqa: F401
     import app.models.document  # noqa: F401
     import app.models.document_page  # noqa: F401
     import app.models.extracted_field  # noqa: F401
     import app.models.review_action  # noqa: F401
     import app.models.validation_flag  # noqa: F401
-
-    Base.metadata.create_all(bind=get_engine())
 
 
 def clear_db_state() -> None:

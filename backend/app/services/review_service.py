@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import logging
+
 from sqlalchemy.orm import Session
 
 from app.core.exceptions import DocumentNotFoundError, ProcessingFailureError
@@ -18,6 +20,8 @@ from app.schemas.review import (
 )
 from app.services.extraction_service import ExtractionService
 from app.services.validation_service import ValidationService
+
+logger = logging.getLogger(__name__)
 
 
 class ReviewService:
@@ -69,6 +73,17 @@ class ReviewService:
         self._refresh_cross_document_validation(document.application_id)
         self._sync_application_status(document.application_id)
 
+        logger.info(
+            "review update persisted",
+            extra={
+                "event": "document_review_updated",
+                "document_id": document.id,
+                "application_id": document.application_id,
+                "reviewer_name": review_action.reviewer_name,
+                "status": document.status,
+            },
+        )
+
         return ReviewUpdateResponse(
             document_id=document.id,
             status=DocumentStatus(document.status),
@@ -97,6 +112,18 @@ class ReviewService:
         )
         self._refresh_cross_document_validation(document.application_id)
         self._sync_application_status(document.application_id)
+
+        logger.info(
+            "review decision persisted",
+            extra={
+                "event": "document_review_decision",
+                "document_id": document.id,
+                "application_id": document.application_id,
+                "reviewer_name": review_action.reviewer_name,
+                "action": review_action.action,
+                "status": document.status,
+            },
+        )
 
         return ReviewDecisionResponse(
             document_id=document.id,

@@ -22,6 +22,7 @@ services:
     environment:
       APP_NAME: ${APP_NAME:-Finova AI Backend}
       DEBUG: ${DEBUG:-false}
+      AUTO_INIT_DB: ${AUTO_INIT_DB:-false}
       DATABASE_URL: ${DATABASE_URL:-postgresql+psycopg://finova:finova@postgres:5432/finova}
       STORAGE_BACKEND: ${STORAGE_BACKEND:-minio}
       FILESYSTEM_STORAGE_ROOT: ${FILESYSTEM_STORAGE_ROOT:-./storage}
@@ -39,6 +40,8 @@ services:
       LLM_MODEL: ${LLM_MODEL:-}
       LLM_TIMEOUT_SECONDS: ${LLM_TIMEOUT_SECONDS:-30}
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000,http://127.0.0.1:3000}
+      MAX_REQUEST_SIZE_BYTES: ${MAX_REQUEST_SIZE_BYTES:-10485760}
+      MAX_UPLOAD_SIZE_BYTES: ${MAX_UPLOAD_SIZE_BYTES:-8388608}
     ports:
       - "8000:8000"
     depends_on:

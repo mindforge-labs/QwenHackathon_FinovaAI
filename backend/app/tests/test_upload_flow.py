@@ -22,6 +22,8 @@ class UploadFlowTests(unittest.IsolatedAsyncioTestCase):
         os.environ["STORAGE_BACKEND"] = "filesystem"
         os.environ["FILESYSTEM_STORAGE_ROOT"] = str(self.storage_root)
         os.environ["MINIO_BUCKET_NAME"] = "loan-docs"
+        os.environ["MAX_REQUEST_SIZE_BYTES"] = str(1024 * 1024)
+        os.environ["MAX_UPLOAD_SIZE_BYTES"] = str(512 * 1024)
 
         clear_settings_cache()
         clear_db_state()
@@ -43,6 +45,8 @@ class UploadFlowTests(unittest.IsolatedAsyncioTestCase):
             "STORAGE_BACKEND",
             "FILESYSTEM_STORAGE_ROOT",
             "MINIO_BUCKET_NAME",
+            "MAX_REQUEST_SIZE_BYTES",
+            "MAX_UPLOAD_SIZE_BYTES",
         ):
             os.environ.pop(variable, None)
 
@@ -106,6 +110,16 @@ class UploadFlowTests(unittest.IsolatedAsyncioTestCase):
         )
 
         self.assertEqual(response.status_code, 400)
+
+    async def test_rejects_oversized_upload(self) -> None:
+        application_id = await self._create_application()
+
+        response = await self.client.post(
+            f"/applications/{application_id}/documents",
+            files={"file": ("big.pdf", b"x" * (600 * 1024), "application/pdf")},
+        )
+
+        self.assertEqual(response.status_code, 413)
 
     async def _create_application(self) -> str:
         response = await self.client.post("/applications", json={"applicant_name": "Tester"})
