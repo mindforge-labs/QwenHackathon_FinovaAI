@@ -13,8 +13,10 @@ from app.core.config import clear_settings_cache
 from app.core.db import clear_db_state, get_session_factory, init_db
 from app.main import create_app
 from app.repositories.document_repository import DocumentRepository
+from app.services.extraction_service import ExtractionService
 from app.services.ocr_service import OCRLine, OCRPageResult, OCRService
 from app.services.pipeline_service import PipelineService
+from app.core.exceptions import ProcessingFailureError
 
 
 class FakeOCRService(OCRService):
@@ -33,6 +35,11 @@ class FakeOCRService(OCRService):
             lines=[line],
             confidence=0.92,
         )
+
+
+class FailingExtractionService(ExtractionService):
+    def extract(self, *, document_type: str, ocr_text: str):
+        raise FileNotFoundError("schema fixture missing")
 
 
 class ExtractionPipelineTests(unittest.IsolatedAsyncioTestCase):
@@ -103,6 +110,7 @@ class ExtractionPipelineTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(detail.status_code, 200)
         payload = detail.json()
         self.assertEqual(payload["document_type"], "payslip")
+        self.assertEqual(payload["page_count"], 1)
         self.assertIsNotNone(payload["extraction"])
         self.assertEqual(payload["extraction"]["normalized_extraction_json"]["employee_name"], "Jane Doe")
         self.assertEqual(payload["extraction"]["normalized_extraction_json"]["employer_name"], "Finova AI")
@@ -133,6 +141,34 @@ class ExtractionPipelineTests(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(document.extracted_fields)
         self.assertEqual(document.extracted_fields[0].normalized_extraction_json["pay_period"], "03/2026")
         self.assertIsNotNone(document.extraction_confidence)
+
+    async def test_processing_failure_marks_document_failed(self) -> None:
+        application_id = await self._create_application()
+        image_bytes = self._create_png_bytes("ID CARD")
+
+        upload = await self.client.post(
+            f"/applications/{application_id}/documents",
+            files={"file": ("id-card.png", image_bytes, "image/png")},
+        )
+        document_id = upload.json()["document_id"]
+
+        ocr_text = "CAN CUOC CONG DAN 123456789012"
+        session = get_session_factory()()
+        try:
+            pipeline = PipelineService(
+                session,
+                ocr_service=FakeOCRService(ocr_text),
+                extraction_service=FailingExtractionService(),
+            )
+            with self.assertRaises(ProcessingFailureError):
+                pipeline.process_document(document_id)
+        finally:
+            session.close()
+
+        detail = await self.client.get(f"/documents/{document_id}")
+        self.assertEqual(detail.status_code, 200)
+        self.assertEqual(detail.json()["status"], "failed")
+        self.assertEqual(detail.json()["page_count"], 1)
 
     async def _create_application(self) -> str:
         response = await self.client.post("/applications", json={"applicant_name": "Extractor"})

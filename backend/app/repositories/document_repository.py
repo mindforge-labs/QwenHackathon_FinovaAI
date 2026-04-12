@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.orm import Session, selectinload
 
 from app.models.document import Document
@@ -52,6 +52,14 @@ class DocumentRepository:
         self.db.commit()
         self.db.refresh(document)
         return document
+
+    def update_status_by_id(self, document_id: str, *, status: str) -> None:
+        self.db.execute(
+            update(Document)
+            .where(Document.id == document_id)
+            .values(status=status)
+        )
+        self.db.commit()
 
     def save(self, document: Document) -> Document:
         self.db.add(document)

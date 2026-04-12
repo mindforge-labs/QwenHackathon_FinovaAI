@@ -42,6 +42,7 @@ class PipelineService:
         ocr_service: OCRService | None = None,
         extraction_service: ExtractionService | None = None,
     ):
+        self.db = db
         self.document_repository = DocumentRepository(db)
         self.document_page_repository = DocumentPageRepository(db)
         self.extracted_field_repository = ExtractedFieldRepository(db)
@@ -191,20 +192,18 @@ class PipelineService:
                 ocr_confidence=document.ocr_confidence,
             )
         except ProcessingFailureError:
-            refreshed_document = self.document_repository.get_by_id(document_id)
-            if refreshed_document is not None:
-                self.document_repository.update_status(
-                    refreshed_document,
-                    status=DocumentStatus.FAILED.value,
-                )
+            self.db.rollback()
+            self.document_repository.update_status_by_id(
+                document_id,
+                status=DocumentStatus.FAILED.value,
+            )
             raise
         except Exception as exc:
-            refreshed_document = self.document_repository.get_by_id(document_id)
-            if refreshed_document is not None:
-                self.document_repository.update_status(
-                    refreshed_document,
-                    status=DocumentStatus.FAILED.value,
-                )
+            self.db.rollback()
+            self.document_repository.update_status_by_id(
+                document_id,
+                status=DocumentStatus.FAILED.value,
+            )
             raise ProcessingFailureError("Document processing failed unexpectedly.") from exc
 
         return DocumentProcessResponse(
@@ -237,6 +236,7 @@ class PipelineService:
             storage_key=document.storage_key,
             document_type=document.document_type,
             status=DocumentStatus(document.status),
+            page_count=len(document.pages),
             quality_score=document.quality_score,
             ocr_confidence=document.ocr_confidence,
             extraction_confidence=document.extraction_confidence,

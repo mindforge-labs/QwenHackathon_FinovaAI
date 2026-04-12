@@ -8,7 +8,7 @@ from pathlib import Path
 from app.core.exceptions import ProcessingFailureError
 from app.services.llm_service import LLMService, build_llm_service
 
-SCHEMA_DIR = Path(__file__).resolve().parents[3] / "docs" / "agent" / "schemas"
+SCHEMA_DIR = Path(__file__).resolve().parents[2] / "docs" / "agent" / "schemas"
 PROMPT_DIR = Path(__file__).resolve().parents[1] / "prompts"
 
 

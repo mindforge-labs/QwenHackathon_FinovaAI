@@ -51,6 +51,7 @@ class DocumentDetail(ORMModel):
     storage_key: str
     document_type: str | None = None
     status: DocumentStatus
+    page_count: int
     quality_score: float | None = None
     ocr_confidence: float | None = None
     extraction_confidence: float | None = None
