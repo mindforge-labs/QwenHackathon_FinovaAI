@@ -154,6 +154,34 @@ class ReviewFlowTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(application.status, "approved")
         self.assertEqual(document.status, "approved")
 
+    async def test_document_detail_includes_real_review_signals_and_timeline(self) -> None:
+        application_id, document_id = await self._prepare_processed_payslip()
+
+        detail = await self.client.get(f"/documents/{document_id}")
+        self.assertEqual(detail.status_code, 200)
+        payload = detail.json()
+        self.assertEqual(payload["application_id"], application_id)
+        self.assertEqual(payload["pages"][0]["ocr_lines"][0]["confidence"], 0.93)
+        self.assertTrue(any(signal["field_name"] == "employee_name" for signal in payload["field_signals"]))
+        employee_signal = next(
+            signal for signal in payload["field_signals"] if signal["field_name"] == "employee_name"
+        )
+        self.assertEqual(employee_signal["source"], "ocr_line_match")
+        self.assertEqual(employee_signal["page_number"], 1)
+        self.assertIsNotNone(employee_signal["bbox"])
+        self.assertTrue(any(item["code"] == "upload_received" for item in payload["timeline"]))
+        self.assertTrue(any(item["code"] == "ocr_completed" for item in payload["timeline"]))
+        self.assertTrue(any(item["code"] == "extraction_completed" for item in payload["timeline"]))
+        self.assertTrue(any(item["code"] == "validation_completed" for item in payload["timeline"]))
+
+        listing = await self.client.get("/applications")
+        self.assertEqual(listing.status_code, 200)
+        application_summary = listing.json()["items"][0]
+        self.assertEqual(application_summary["status"], "under_review")
+        self.assertEqual(application_summary["document_count"], 1)
+        self.assertEqual(application_summary["processed_document_count"], 1)
+        self.assertEqual(application_summary["next_review_document_id"], document_id)
+
     async def _prepare_processed_payslip(self) -> tuple[str, str]:
         application_id = await self._create_application()
         image_bytes = self._create_png_bytes("PAYSLIP")

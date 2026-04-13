@@ -64,6 +64,7 @@ The application detail page must show:
 - processing status per document
 - document type
 - quality or warning summary
+- aggregate counters that match the dashboard and come from backend responses, not client-side mock calculations
 
 This page should let reviewers understand which documents are ready, still processing, or need review before they open the full review screen.
 
@@ -76,10 +77,12 @@ The review page must show:
 - validation flags
 - OCR raw text section
 - reviewer actions
+- backend-backed timeline of upload, OCR, extraction, validation, and review events
+- backend-backed field highlight metadata when OCR geometry is available
 
 Nice to have, but not required for the MVP:
 
-- OCR bounding box overlay on the image
+- richer OCR bounding box overlay on the image
 - highlighting of suspicious or missing fields
 
 ## Frontend Data Dependencies
@@ -94,6 +97,7 @@ Nice to have, but not required for the MVP:
 - Reviewers should be able to approve even when warnings exist.
 - Review history must remain visible through backend-backed data, not only local UI state.
 - The UI should surface low-confidence and validation issues rather than hiding them behind success states.
+- Dashboard metrics and next-review shortcuts should prefer enriched backend summaries over frontend N+1 fetching or inferred mock-like counters.
 
 ## See Also
 

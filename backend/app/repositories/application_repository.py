@@ -31,13 +31,22 @@ class ApplicationRepository:
         return application
 
     def list(self) -> list[Application]:
-        statement = select(Application).order_by(Application.created_at.desc())
+        statement = (
+            select(Application)
+            .options(
+                selectinload(Application.documents).selectinload(Document.pages),
+                selectinload(Application.documents).selectinload(Document.validation_flags),
+                selectinload(Application.documents).selectinload(Document.review_actions),
+            )
+            .order_by(Application.created_at.desc())
+        )
         return list(self.db.scalars(statement))
 
     def get_by_id(self, application_id: str) -> Application | None:
         statement = (
             select(Application)
             .options(
+                selectinload(Application.documents).selectinload(Document.pages),
                 selectinload(Application.documents).selectinload(Document.extracted_fields),
                 selectinload(Application.documents).selectinload(Document.validation_flags),
                 selectinload(Application.documents).selectinload(Document.review_actions),

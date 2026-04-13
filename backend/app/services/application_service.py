@@ -10,6 +10,7 @@ from app.schemas.application import (
     ApplicationSummary,
 )
 from app.schemas.common import ApplicationStatus
+from app.services.presentation_service import build_application_detail, build_application_summary
 
 
 class ApplicationService:
@@ -23,15 +24,15 @@ class ApplicationService:
             email=payload.email,
             status=ApplicationStatus.DRAFT.value,
         )
-        return ApplicationSummary.model_validate(application)
+        return build_application_summary(application)
 
     def list_applications(self) -> list[ApplicationSummary]:
         applications = self.repository.list()
-        return [ApplicationSummary.model_validate(application) for application in applications]
+        return [build_application_summary(application) for application in applications]
 
     def get_application_detail(self, application_id: str) -> ApplicationDetail:
         application = self.repository.get_by_id(application_id)
         if application is None:
             raise ApplicationNotFoundError(f"Application '{application_id}' was not found.")
 
-        return ApplicationDetail.model_validate(application)
+        return build_application_detail(application)

@@ -90,6 +90,15 @@ class UploadFlowTests(unittest.IsolatedAsyncioTestCase):
         detail = await self.client.get(f"/applications/{application_id}")
         self.assertEqual(detail.status_code, 200)
         self.assertEqual(len(detail.json()["documents"]), 1)
+        self.assertEqual(detail.json()["status"], "processing")
+        self.assertEqual(detail.json()["document_count"], 1)
+        self.assertEqual(detail.json()["processed_document_count"], 0)
+
+        listing = await self.client.get("/applications")
+        self.assertEqual(listing.status_code, 200)
+        self.assertEqual(listing.json()["items"][0]["document_count"], 1)
+        self.assertEqual(listing.json()["items"][0]["flagged_document_count"], 0)
+        self.assertIsNone(listing.json()["items"][0]["next_review_document_id"])
 
     async def test_rejects_unsupported_file_type(self) -> None:
         application_id = await self._create_application()

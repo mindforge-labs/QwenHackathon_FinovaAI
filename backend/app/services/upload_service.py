@@ -17,6 +17,7 @@ from app.repositories.application_repository import ApplicationRepository
 from app.repositories.document_repository import DocumentRepository
 from app.schemas.common import DocumentStatus
 from app.schemas.document import DocumentUploadResponse
+from app.services.application_status_service import ApplicationStatusService
 from app.services.storage_service import StorageService
 from app.utils.file_utils import is_supported_upload, sanitize_filename
 from app.utils.hashing_utils import sha256_bytes
@@ -28,6 +29,7 @@ class UploadService:
     def __init__(self, db: Session, storage_service: StorageService | None = None):
         self.application_repository = ApplicationRepository(db)
         self.document_repository = DocumentRepository(db)
+        self.application_status_service = ApplicationStatusService(db)
         self.storage_service = storage_service or StorageService()
         self.settings = get_settings()
 
@@ -74,6 +76,7 @@ class UploadService:
             storage_key=storage_key,
             status=DocumentStatus.UPLOADED.value,
         )
+        self.application_status_service.sync(application_id)
 
         logger.info(
             "document upload stored",
