@@ -5,12 +5,23 @@ import { FormEvent, useState } from "react";
 
 import { MetricCard } from "@/components/common/metric-card";
 import { PipelineStrip } from "@/components/common/pipeline-strip";
-import { ProgressMeter } from "@/components/common/progress-meter";
 import { SectionCard } from "@/components/common/section-card";
 import { StatusBadge } from "@/components/common/status-badge";
+import {
+  buttonStyles,
+  displayFont,
+  emptyState,
+  eyebrow,
+  feedbackError,
+  input,
+  inverseEyebrow,
+  label,
+  sectionCardDark,
+  signalPillStyles,
+} from "@/components/common/ui";
 import { useApplications } from "@/hooks/useApplications";
 import { ApplicationSummary } from "@/lib/types";
-import { formatDate } from "@/lib/utils";
+import { cn, formatDate } from "@/lib/utils";
 
 function getApplicationBucket(application: ApplicationSummary): "flagged" | "processing" | "draft" | "approved" {
   if (application.status === "approved") {
@@ -94,41 +105,52 @@ export default function ApplicationsPage() {
 
   return (
     <>
-      <section className="hero hero--dashboard">
-        <div className="hero__content">
-          <div className="hero__body">
-            <p className="eyebrow">AI risk review platform</p>
-            <h1>Make the AI visible. Make the risk obvious. Make the human decision powerful.</h1>
-            <p>
+      <section>
+        <div className="relative isolate flex min-h-[calc(100vh-232px)] flex-col justify-between gap-10 overflow-hidden rounded-[40px] border border-white/10 bg-[radial-gradient(circle_at_16%_18%,rgba(159,232,112,0.24),transparent_28%),radial-gradient(circle_at_82%_18%,rgba(255,209,26,0.18),transparent_24%),radial-gradient(circle_at_82%_82%,rgba(56,189,248,0.16),transparent_28%),linear-gradient(122deg,#09120a_0%,#123416_34%,#0f5a42_72%,#2f1f08_100%)] px-[clamp(28px,4vw,56px)] py-[clamp(28px,4vw,56px)] text-[#f7fcef] shadow-[0_24px_60px_rgba(8,17,10,0.28)] lg:flex-row lg:items-center">
+          <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(112deg,rgba(255,255,255,0.1),rgba(255,255,255,0)_32%),linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0))]" />
+          <div className="relative z-10 max-w-[42rem]">
+            <p className={inverseEyebrow}>AI risk review platform</p>
+            <h1 className={`${displayFont} mt-4 max-w-[16ch] text-[clamp(2rem,5vw,4rem)] text-[#f7fcef] [text-shadow:0_12px_32px_rgba(0,0,0,0.18)]`}>
+              Make the AI visible. Make the risk obvious. Make the human decision powerful.
+            </h1>
+            <p className="mt-5 max-w-[76ch] text-[1.08rem] leading-8 text-[#edf4e8]/85">
               Finova turns the intake desk into a live command center: upload files, watch OCR and
               extraction flow, then route risky cases into a decisive human review lane.
             </p>
-            <div className="hero__actions">
-              <Link className="button button-primary" href="#create-application">
+            <div className="mt-7 flex flex-wrap items-center gap-3">
+              <Link className={buttonStyles("primary", "shadow-[0_14px_36px_rgba(159,232,112,0.18)]")} href="#create-application">
                 Start new application
               </Link>
               {reviewCandidate?.next_review_document_id ? (
                 <Link
-                  className="button button-secondary"
+                  className={buttonStyles("secondary", "bg-white/[0.12] text-[#f8fbf4] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.12)] hover:bg-white/[0.18]")}
                   href={`/review/${reviewCandidate.next_review_document_id}`}
                 >
                   Continue last review
                 </Link>
               ) : (
-                <Link className="button button-secondary" href="/applications">
+                <Link
+                  className={buttonStyles("secondary", "bg-white/[0.12] text-[#f8fbf4] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.12)] hover:bg-white/[0.18]")}
+                  href="/applications"
+                >
                   Monitor queue
                 </Link>
               )}
             </div>
           </div>
 
-          <div className="hero__visual">
-            <img alt="AI review command center" src="/Banknote-bro.png" />
+          <div className="relative z-10 flex justify-center">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              alt="AI review command center"
+              className="h-auto w-full max-w-[min(480px,40vw)] rounded-[32px]"
+              src="/Banknote-bro.png"
+            />
           </div>
         </div>
       </section>
 
-      <section className="metric-grid">
+      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <MetricCard
           detail={`${totalDocuments} document(s) tracked across the desk`}
           label="Total applications"
@@ -155,27 +177,29 @@ export default function ApplicationsPage() {
         />
       </section>
 
-      <div className="dashboard-grid dashboard-grid--dashboard">
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.45fr)_minmax(340px,0.9fr)]">
         <SectionCard
           eyebrow="Applications"
           subtitle="Grouped by urgency so the review desk can focus where risk is surfacing."
           title="Portfolio queue"
         >
           {loading ? <p>Loading applications...</p> : null}
-          {error ? <p className="feedback feedback-error">{error}</p> : null}
+          {error ? <p className={feedbackError}>{error}</p> : null}
 
-          <div className="application-groups">
+          <div className="grid gap-6">
             {groups.map((group) => (
-              <section className="application-group" key={group.key}>
-                <header className="application-group__header">
+              <section className="grid gap-4" key={group.key}>
+                <header className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
                   <div>
-                    <p className="eyebrow">{group.title}</p>
-                    <h3>{group.items.length} case(s)</h3>
+                    <p className={eyebrow}>{group.title}</p>
+                    <h3 className="mt-2 text-[1.6rem] font-semibold tracking-[-0.03em] text-[#0e0f0c]">
+                      {group.items.length} case(s)
+                    </h3>
                   </div>
-                  <p>{group.subtitle}</p>
+                  <p className="max-w-2xl text-sm leading-6 text-[#454745]">{group.subtitle}</p>
                 </header>
 
-                <div className="application-list">
+                <div className="grid gap-4">
                   {group.items.map((application) => {
                     const totalDocsForApp = application.document_count;
                     const processedDocs = application.processed_document_count;
@@ -183,39 +207,61 @@ export default function ApplicationsPage() {
                     const progress = totalDocsForApp === 0 ? 0 : (processedDocs / totalDocsForApp) * 100;
 
                     return (
-                      <Link className="application-card" href={`/applications/${application.id}`} key={application.id}>
-                        <div className="application-card__header">
+                      <Link
+                        className="rounded-[30px] border border-black/10 bg-white/[0.82] p-5 shadow-[0_0_0_1px_rgba(14,15,12,0.04)] transition duration-200 hover:-translate-y-1 hover:border-[#9fe870]/40 hover:shadow-[0_18px_40px_rgba(14,15,12,0.08)]"
+                        href={`/applications/${application.id}`}
+                        key={application.id}
+                      >
+                        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                           <div>
-                            <h3>{application.applicant_name || "Untitled application"}</h3>
-                            <p>{application.email || application.phone || "No contact info yet"}</p>
+                            <h3 className="text-[1.45rem] font-semibold tracking-[-0.03em] text-[#0e0f0c]">
+                              {application.applicant_name || "Untitled application"}
+                            </h3>
+                            <p className="mt-2 text-sm leading-6 text-[#454745]">
+                              {application.email || application.phone || "No contact info yet"}
+                            </p>
                           </div>
-                          <div className="application-card__signals">
+                          <div className="flex flex-wrap items-center gap-3">
                             {flaggedDocs > 0 ? (
-                              <span className="signal-pill signal-pill--danger">
+                              <span className={signalPillStyles("danger")}>
                                 {flaggedDocs} risk signal{flaggedDocs > 1 ? "s" : ""}
                               </span>
                             ) : (
-                              <span className="signal-pill signal-pill--neutral">Clean scan</span>
+                              <span className={signalPillStyles("neutral")}>Clean scan</span>
                             )}
                             <StatusBadge status={application.status} />
                           </div>
                         </div>
 
-                        <div className="application-card__meta">
+                        <div className="mt-4 flex flex-wrap gap-3 text-[0.92rem] text-[#6c7268]">
                           <span>Created {formatDate(application.created_at)}</span>
                           <span>{totalDocsForApp} document(s)</span>
                           <span>{processedDocs} processed</span>
                         </div>
 
-                        <ProgressMeter
-                          label={
-                            totalDocsForApp > 0
-                              ? `${processedDocs}/${totalDocsForApp} documents processed`
-                              : "Awaiting uploads"
-                          }
-                          tone={flaggedDocs > 0 ? "warning" : application.status === "approved" ? "positive" : "brand"}
-                          value={progress}
-                        />
+                        <div className="mt-5 grid gap-2">
+                          <div className="flex items-center justify-between gap-4 text-sm">
+                            <span className="text-[#454745]">
+                              {totalDocsForApp > 0
+                                ? `${processedDocs}/${totalDocsForApp} documents processed`
+                                : "Awaiting uploads"}
+                            </span>
+                            <strong className="font-semibold text-[#0e0f0c]">{Math.round(progress)}%</strong>
+                          </div>
+                          <div className="relative h-2.5 overflow-hidden rounded-full bg-black/[0.08]">
+                            <span
+                              className={cn(
+                                "absolute inset-y-0 left-0 rounded-full",
+                                flaggedDocs > 0
+                                  ? "bg-[#ffd11a]"
+                                  : application.status === "approved"
+                                    ? "bg-[#054d28]"
+                                    : "bg-[#9fe870]",
+                              )}
+                              style={{ width: `${progress}%` }}
+                            />
+                          </div>
+                        </div>
                       </Link>
                     );
                   })}
@@ -223,58 +269,63 @@ export default function ApplicationsPage() {
               </section>
             ))}
 
-            {!loading && orderedItems.length === 0 ? <p className="empty-state">No applications yet.</p> : null}
+            {!loading && orderedItems.length === 0 ? <p className={emptyState}>No applications yet.</p> : null}
           </div>
         </SectionCard>
 
-        <div className="dashboard-sidebar">
-
+        <div className="grid gap-6">
           <SectionCard
-            actions={<span className="signal-pill signal-pill--soft">{submitting ? "Creating..." : "Ready"}</span>}
+            actions={<span className={signalPillStyles("soft")}>{submitting ? "Creating..." : "Ready"}</span>}
             eyebrow="Quick action"
             id="create-application"
             subtitle="Kick off a new lending intake case from the dashboard."
             title="Create application"
           >
-            <form className="create-form" onSubmit={(event) => void handleCreate(event)}>
-              <label>
+            <form className="grid gap-4 md:grid-cols-2" onSubmit={(event) => void handleCreate(event)}>
+              <label className={label}>
                 Applicant Name
                 <input
+                  className={input}
                   value={form.applicant_name}
                   onChange={(event) => setForm((current) => ({ ...current, applicant_name: event.target.value }))}
                 />
               </label>
-              <label>
+              <label className={label}>
                 Phone
                 <input
+                  className={input}
                   value={form.phone}
                   onChange={(event) => setForm((current) => ({ ...current, phone: event.target.value }))}
                 />
               </label>
-              <label className="form-grid__full">
+              <label className={`${label} md:col-span-2`}>
                 Email
                 <input
+                  className={input}
                   value={form.email}
                   onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))}
                 />
               </label>
-              <div className="form-grid__full">
-                <button className="button button-primary" disabled={submitting} type="submit">
+              <div className="md:col-span-2">
+                <button className={buttonStyles("primary")} disabled={submitting} type="submit">
                   {submitting ? "Creating..." : "Create Application"}
                 </button>
               </div>
             </form>
           </SectionCard>
 
-<aside className="hero__panel hero__panel--dark">
-          <div className="hero__panel-header">
+          <aside className={sectionCardDark}>
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div>
-              <p className="eyebrow eyebrow--inverse">Processing pipeline</p>
-              <h2>Command center flow</h2>
+              <p className={inverseEyebrow}>Processing pipeline</p>
+              <h2 className={`${displayFont} mt-2 text-[clamp(1.55rem,2.6vw,2.1rem)] text-[#ecf3e2]`}>
+                Command center flow
+              </h2>
             </div>
-            <span className="signal-pill signal-pill--positive">Live</span>
+            <span className={signalPillStyles("positive")}>Live</span>
           </div>
-          <PipelineStrip
+          <div className="mt-6">
+            <PipelineStrip
             steps={[
               {
                 label: "Upload",
@@ -302,18 +353,19 @@ export default function ApplicationsPage() {
               },
             ]}
           />
-          <div className="hero-stats">
-            <div>
-              <span>Docs monitored</span>
-              <strong>{totalDocuments}</strong>
+          </div>
+          <div className="mt-6 grid gap-3 sm:grid-cols-3">
+            <div className="rounded-[24px] border border-white/10 bg-white/5 px-4 py-4">
+              <span className="text-xs font-bold uppercase tracking-[0.14em] text-[#c7d8bb]">Docs monitored</span>
+              <strong className="mt-2 block text-3xl font-black tracking-[-0.04em] text-[#f7fcef]">{totalDocuments}</strong>
             </div>
-            <div>
-              <span>Review queue</span>
-              <strong>{flaggedApplications.length}</strong>
+            <div className="rounded-[24px] border border-white/10 bg-white/5 px-4 py-4">
+              <span className="text-xs font-bold uppercase tracking-[0.14em] text-[#c7d8bb]">Review queue</span>
+              <strong className="mt-2 block text-3xl font-black tracking-[-0.04em] text-[#f7fcef]">{flaggedApplications.length}</strong>
             </div>
-            <div>
-              <span>Cleared cases</span>
-              <strong>{approvedApplications.length}</strong>
+            <div className="rounded-[24px] border border-white/10 bg-white/5 px-4 py-4">
+              <span className="text-xs font-bold uppercase tracking-[0.14em] text-[#c7d8bb]">Cleared cases</span>
+              <strong className="mt-2 block text-3xl font-black tracking-[-0.04em] text-[#f7fcef]">{approvedApplications.length}</strong>
             </div>
           </div>
         </aside>
@@ -323,17 +375,20 @@ export default function ApplicationsPage() {
             subtitle="Shortcuts for the demo flow so you can move from dashboard to review with one click."
             title="Desk shortcuts"
           >
-            <div className="quick-action-grid">
-              <Link className="quick-action-card" href="#create-application">
+            <div className="grid gap-4">
+              <Link
+                className="rounded-[28px] border border-black/10 bg-white/75 p-5 transition duration-200 hover:-translate-y-1 hover:border-[#9fe870]/40 hover:bg-white"
+                href="#create-application"
+              >
                 <strong>Start new application</strong>
-                <span>Create a fresh case and move files into intake.</span>
+                <span className="mt-2 block text-sm leading-6 text-[#454745]">Create a fresh case and move files into intake.</span>
               </Link>
               <Link
-                className="quick-action-card"
+                className="rounded-[28px] border border-black/10 bg-white/75 p-5 transition duration-200 hover:-translate-y-1 hover:border-[#9fe870]/40 hover:bg-white"
                 href={reviewCandidate?.next_review_document_id ? `/review/${reviewCandidate.next_review_document_id}` : "/applications"}
               >
                 <strong>Continue last review</strong>
-                <span>
+                <span className="mt-2 block text-sm leading-6 text-[#454745]">
                   {reviewCandidate?.next_review_document_file_name
                     ? `Resume ${reviewCandidate.next_review_document_file_name}`
                     : "Open the dashboard once a flagged document exists."}

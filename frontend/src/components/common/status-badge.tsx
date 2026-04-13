@@ -1,9 +1,10 @@
+import { statusBadgeStyles, statusDotStyles } from "@/components/common/ui";
 import { formatStatusLabel } from "@/lib/utils";
 
 export function StatusBadge({ status }: { status: string }) {
   return (
-    <span className={`status-badge status-${status}`}>
-      <span className="status-badge__dot" />
+    <span className={statusBadgeStyles(status)}>
+      <span className={statusDotStyles(status)} />
       {formatStatusLabel(status)}
     </span>
   );

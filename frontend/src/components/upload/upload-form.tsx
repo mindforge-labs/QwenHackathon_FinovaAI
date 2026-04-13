@@ -3,6 +3,8 @@
 import { useRef, useState } from "react";
 
 import { PipelineStrip } from "@/components/common/pipeline-strip";
+import { buttonStyles, feedbackError, inverseEyebrow, signalPillStyles } from "@/components/common/ui";
+import { cn } from "@/lib/utils";
 
 export function UploadForm({
   onUpload,
@@ -37,12 +39,22 @@ export function UploadForm({
   }
 
   return (
-    <div className="upload-form">
-      <label className={`upload-dropzone ${busy ? "upload-dropzone--busy" : ""}`}>
-        <span className="upload-dropzone__eyebrow">Document intake</span>
+    <div className="grid gap-5">
+      <label
+        className={cn(
+          "grid gap-3 rounded-[32px] border border-dashed p-6 text-left transition duration-200",
+          busy
+            ? "border-[#9fe870]/50 bg-[#9fe870]/10"
+            : "border-black/[0.12] bg-[linear-gradient(135deg,rgba(255,255,255,0.84),rgba(255,255,255,0.66)),linear-gradient(180deg,rgba(159,232,112,0.08),transparent_70%)] hover:border-[#9fe870]/40 hover:bg-white/90",
+        )}
+      >
+        <span className={inverseEyebrow.replace("text-white/65", "text-[#6c7268]")}>Document intake</span>
         <strong>Drop or browse ID cards, payslips, and bank statements.</strong>
-        <span>Raw files stay preserved. OCR and extraction artifacts are tracked separately.</span>
+        <span className="text-sm leading-6 text-[#454745]">
+          Raw files stay preserved. OCR and extraction artifacts are tracked separately.
+        </span>
         <input
+          className="text-sm text-[#454745] file:mr-4 file:rounded-full file:border-0 file:bg-[#9fe870] file:px-4 file:py-2 file:font-semibold file:text-[#163300]"
           ref={inputRef}
           accept=".png,.jpg,.jpeg,.pdf"
           multiple
@@ -51,19 +63,22 @@ export function UploadForm({
         />
       </label>
 
-      <div className="upload-supported-types">
-        <span className="signal-pill signal-pill--soft">.jpg</span>
-        <span className="signal-pill signal-pill--soft">.jpeg</span>
-        <span className="signal-pill signal-pill--soft">.png</span>
-        <span className="signal-pill signal-pill--soft">.pdf</span>
+      <div className="flex flex-wrap items-center gap-3">
+        <span className={signalPillStyles("soft")}>.jpg</span>
+        <span className={signalPillStyles("soft")}>.jpeg</span>
+        <span className={signalPillStyles("soft")}>.png</span>
+        <span className={signalPillStyles("soft")}>.pdf</span>
       </div>
 
       {selectedFiles.length > 0 ? (
-        <div className="upload-file-list">
+        <div className="grid gap-3">
           {selectedFiles.map((file) => (
-            <div className="upload-file-list__item" key={`${file.name}-${file.lastModified}`}>
+            <div
+              className="flex items-center justify-between gap-3 rounded-[22px] border border-black/10 bg-white/[0.78] px-4 py-3"
+              key={`${file.name}-${file.lastModified}`}
+            >
               <strong>{file.name}</strong>
-              <span>{Math.max(1, Math.round(file.size / 1024))} KB</span>
+              <span className="text-sm text-[#454745]">{Math.max(1, Math.round(file.size / 1024))} KB</span>
             </div>
           ))}
         </div>
@@ -95,10 +110,10 @@ export function UploadForm({
         ]}
       />
 
-      <button className="button button-primary" disabled={busy} onClick={handleUpload} type="button">
+      <button className={buttonStyles("primary", "justify-center")} disabled={busy} onClick={handleUpload} type="button">
         {busy ? "Uploading..." : "Upload Documents"}
       </button>
-      {error ? <p className="feedback feedback-error">{error}</p> : null}
+      {error ? <p className={feedbackError}>{error}</p> : null}
     </div>
   );
 }

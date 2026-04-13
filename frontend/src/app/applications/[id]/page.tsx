@@ -8,6 +8,15 @@ import { PipelineStrip } from "@/components/common/pipeline-strip";
 import { SectionCard } from "@/components/common/section-card";
 import { DocumentList } from "@/components/document/document-list";
 import { UploadForm } from "@/components/upload/upload-form";
+import {
+  buttonStyles,
+  displayFont,
+  emptyState,
+  eyebrow,
+  feedbackError,
+  inverseEyebrow,
+  sectionCardDark,
+} from "@/components/common/ui";
 import { useApplicationDetail } from "@/hooks/useDocument";
 import { formatDate } from "@/lib/utils";
 
@@ -42,40 +51,45 @@ export default function ApplicationDetailPage({
 
   return (
     <>
-      <section className="hero hero--detail">
-        <div className="hero__content">
-          <p className="eyebrow">Application detail</p>
-          <h1>{application?.applicant_name || "Untitled application"}</h1>
-          <p>
+      <section className="grid gap-6 xl:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.95fr)]">
+        <div className="rounded-[40px] border border-black/[0.12] bg-[linear-gradient(135deg,rgba(255,255,255,0.88),rgba(255,255,255,0.72)),linear-gradient(180deg,rgba(159,232,112,0.08),transparent_60%)] p-[34px] shadow-[0_0_0_1px_rgba(14,15,12,0.04)]">
+          <p className={eyebrow}>Application detail</p>
+          <h1 className={`${displayFont} mt-4 text-[clamp(3.6rem,7.8vw,6.75rem)] text-[#0e0f0c]`}>
+            {application?.applicant_name || "Untitled application"}
+          </h1>
+          <p className="mt-5 max-w-[62ch] text-[1.08rem] leading-8 text-[#454745]">
             Keep the intake moving without losing review context. Upload files, trigger the AI pipeline,
             and jump directly into the cases where confidence drops or risk signals appear.
           </p>
           {application ? (
-            <div className="hero__meta">
+            <div className="mt-[18px] flex flex-wrap gap-3 text-[0.92rem] text-[#6c7268]">
               <span>{application.email || application.phone || "No contact info yet"}</span>
               <span>Created {formatDate(application.created_at)}</span>
             </div>
           ) : null}
-          <div className="hero__actions">
-            <Link className="button button-secondary" href="/applications">
+          <div className="mt-7 flex flex-wrap items-center gap-3">
+            <Link className={buttonStyles("secondary")} href="/applications">
               Back to applications
             </Link>
             {reviewCandidate ? (
-              <Link className="button button-primary" href={`/review/${reviewCandidate.id}`}>
+              <Link className={buttonStyles("primary")} href={`/review/${reviewCandidate.id}`}>
                 Open next review
               </Link>
             ) : null}
           </div>
         </div>
 
-        <aside className="hero__panel">
-          <div className="hero__panel-header">
+        <aside className={sectionCardDark}>
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div>
-              <p className="eyebrow">Case flow</p>
-              <h2>Upload to approval</h2>
+              <p className={inverseEyebrow}>Case flow</p>
+              <h2 className={`${displayFont} mt-2 text-[clamp(2rem,3.8vw,3.2rem)] text-[#ecf3e2]`}>
+                Upload to approval
+              </h2>
             </div>
           </div>
-          <PipelineStrip
+          <div className="mt-6">
+            <PipelineStrip
             compact
             steps={[
               {
@@ -100,10 +114,11 @@ export default function ApplicationDetailPage({
               },
             ]}
           />
+          </div>
         </aside>
       </section>
 
-      <section className="metric-grid">
+      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <MetricCard
           detail="Documents attached to this application"
           label="Total documents"
@@ -130,11 +145,11 @@ export default function ApplicationDetailPage({
         />
       </section>
 
-      <div className="dashboard-grid dashboard-grid--detail">
-        <div className="dashboard-sidebar">
+      <div className="grid gap-6 xl:grid-cols-[360px_minmax(0,1fr)]">
+        <div className="grid gap-6">
           <SectionCard
             actions={
-              <button className="button button-secondary" onClick={() => void refresh()} type="button">
+              <button className={buttonStyles("secondary")} onClick={() => void refresh()} type="button">
                 Refresh
               </button>
             }
@@ -143,7 +158,7 @@ export default function ApplicationDetailPage({
             title="Add documents"
           >
           {loading ? <p>Loading application...</p> : null}
-          {error ? <p className="feedback feedback-error">{error}</p> : null}
+          {error ? <p className={feedbackError}>{error}</p> : null}
           {application ? (
             <>
               <UploadForm onUpload={upload} />
@@ -156,16 +171,16 @@ export default function ApplicationDetailPage({
             subtitle="Use these to drive the demo path through processing and manual review."
             title="Case actions"
           >
-            <div className="quick-action-grid">
-              <button className="button button-secondary" onClick={() => void refresh()} type="button">
+            <div className="grid gap-4">
+              <button className={buttonStyles("secondary", "justify-center")} onClick={() => void refresh()} type="button">
                 Sync latest pipeline state
               </button>
               {reviewCandidate ? (
-                <Link className="button button-primary" href={`/review/${reviewCandidate.id}`}>
+                <Link className={buttonStyles("primary", "justify-center")} href={`/review/${reviewCandidate.id}`}>
                   Review flagged document
                 </Link>
               ) : (
-                <span className="empty-state">No review-ready document yet.</span>
+                <span className={emptyState}>No review-ready document yet.</span>
               )}
             </div>
           </SectionCard>
@@ -179,7 +194,7 @@ export default function ApplicationDetailPage({
           {application ? (
             <DocumentList documents={application.documents} onProcess={triggerProcessing} />
           ) : (
-            <p className="empty-state">No documents yet.</p>
+            <p className={emptyState}>No documents yet.</p>
           )}
         </SectionCard>
       </div>

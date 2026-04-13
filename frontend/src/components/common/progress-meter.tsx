@@ -1,3 +1,5 @@
+import { progressFillStyles } from "./ui";
+
 export function ProgressMeter({
   label,
   value,
@@ -10,14 +12,14 @@ export function ProgressMeter({
   const clamped = Math.max(0, Math.min(100, value));
 
   return (
-    <div className="progress-meter">
-      <div className="progress-meter__header">
-        <span>{label}</span>
-        <strong>{Math.round(clamped)}%</strong>
+    <div className="grid gap-2">
+      <div className="flex items-center justify-between gap-4 text-sm">
+        <span className="text-[#454745]">{label}</span>
+        <strong className="font-semibold text-[#0e0f0c]">{Math.round(clamped)}%</strong>
       </div>
-      <div className="progress-meter__track">
+      <div className="relative h-2.5 overflow-hidden rounded-full bg-black/[0.08]">
         <span
-          className={`progress-meter__fill progress-meter__fill--${tone}`}
+          className={progressFillStyles(tone)}
           style={{ width: `${clamped}%` }}
         />
       </div>

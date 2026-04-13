@@ -4,6 +4,8 @@ import Link from "next/link";
 
 import { ProgressMeter } from "@/components/common/progress-meter";
 import { StatusBadge } from "@/components/common/status-badge";
+import { buttonStyles, emptyState, eyebrow, signalPillStyles } from "@/components/common/ui";
+import { cn } from "@/lib/utils";
 import { DocumentStatus, DocumentSummary } from "@/lib/types";
 import { formatDate, formatDocumentType, formatStatusLabel } from "@/lib/utils";
 
@@ -59,22 +61,24 @@ export function DocumentList({
   ].filter((group) => group.items.length > 0);
 
   if (documents.length === 0) {
-    return <p className="empty-state">No documents uploaded yet.</p>;
+    return <p className={emptyState}>No documents uploaded yet.</p>;
   }
 
   return (
-    <div className="document-groups">
+    <div className="grid gap-6">
       {groups.map((group) => (
-        <section className="document-group" key={group.key}>
-          <header className="document-group__header">
+        <section className="grid gap-4" key={group.key}>
+          <header className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
             <div>
-              <p className="eyebrow">{group.title}</p>
-              <h3>{group.items.length} document(s)</h3>
+              <p className={eyebrow}>{group.title}</p>
+              <h3 className="mt-2 text-[1.6rem] font-semibold tracking-[-0.03em] text-[#0e0f0c]">
+                {group.items.length} document(s)
+              </h3>
             </div>
-            <p>{group.subtitle}</p>
+            <p className="max-w-2xl text-sm leading-6 text-[#454745]">{group.subtitle}</p>
           </header>
 
-          <div className="document-list">
+          <div className="grid gap-4">
             {group.items.map((document) => {
               const needsAttention =
                 document.validation_flag_count > 0 ||
@@ -85,49 +89,51 @@ export function DocumentList({
 
               return (
                 <article
-                  className={[
-                    "document-card",
-                    needsAttention ? "document-card--danger" : "document-card--default",
-                  ].join(" ")}
+                  className={cn(
+                    "rounded-[30px] border bg-white/[0.82] p-5 shadow-[0_0_0_1px_rgba(14,15,12,0.04)]",
+                    needsAttention ? "border-[#d03238]/[0.18]" : "border-black/10",
+                  )}
                   key={document.id}
                 >
-                  <div className="document-card__header">
+                  <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                     <div>
-                      <h4>{document.file_name}</h4>
-                      <p>
+                      <h4 className="text-[1.2rem] font-semibold tracking-[-0.03em] text-[#0e0f0c]">{document.file_name}</h4>
+                      <p className="mt-2 text-sm leading-6 text-[#454745]">
                         {formatDocumentType(document.document_type)} · updated {formatDate(document.updated_at)}
                       </p>
                     </div>
-                    <div className="document-card__signals">
+                    <div className="flex flex-wrap items-center gap-3">
                       {document.validation_flag_count > 0 ? (
-                        <span className="signal-pill signal-pill--danger">
+                        <span className={signalPillStyles("danger")}>
                           {document.validation_flag_count} flag{document.validation_flag_count > 1 ? "s" : ""}
                         </span>
                       ) : (
-                        <span className="signal-pill signal-pill--neutral">No flags</span>
+                        <span className={signalPillStyles("neutral")}>No flags</span>
                       )}
                       <StatusBadge status={document.status} />
                     </div>
                   </div>
 
-                  <div className="document-card__meta">
-                    <span className="signal-pill signal-pill--soft">
+                  <div className="mt-4 flex flex-wrap items-center gap-3">
+                    <span className={signalPillStyles("soft")}>
                       {formatStatusLabel(document.status)}
                     </span>
-                    <span className="signal-pill signal-pill--soft">
+                    <span className={signalPillStyles("soft")}>
                       {formatDocumentType(document.document_type)}
                     </span>
                   </div>
 
-                  <ProgressMeter
+                  <div className="mt-5">
+                    <ProgressMeter
                     label="Pipeline progress"
                     tone={needsAttention ? "warning" : document.status === "approved" ? "positive" : "brand"}
                     value={STATUS_PROGRESS[document.status]}
                   />
+                  </div>
 
-                  <div className="document-card__actions">
+                  <div className="mt-5 flex flex-wrap items-center gap-3">
                     <button
-                      className="button button-secondary"
+                      className={buttonStyles("secondary")}
                       disabled={processDisabled}
                       onClick={() => void onProcess(document.id)}
                       type="button"
@@ -135,7 +141,7 @@ export function DocumentList({
                       {processDisabled ? "Processing..." : document.status === "uploaded" ? "Run AI scan" : "Reprocess"}
                     </button>
                     <Link
-                      className={`button ${needsAttention ? "button-primary" : "button-secondary"}`}
+                      className={buttonStyles(needsAttention ? "primary" : "secondary")}
                       href={`/review/${document.id}`}
                     >
                       Open review

@@ -1,3 +1,7 @@
+import { cn } from "@/lib/utils";
+
+import { progressFillStyles, sectionCard } from "./ui";
+
 type ChartSegment = {
   label: string;
   value: number;
@@ -68,10 +72,10 @@ export function RiskDistributionChart({
   let currentAngle = 0;
 
   return (
-    <div className="dashboard-chart dashboard-chart--donut">
-      <div className="dashboard-chart__visual">
-        <svg className="dashboard-donut" viewBox="0 0 120 120" aria-hidden="true">
-          <circle className="dashboard-donut__track" cx="60" cy="60" r="42" />
+    <div className={cn(sectionCard, "grid gap-6")}>
+      <div className="relative mx-auto flex h-[220px] w-[220px] items-center justify-center">
+        <svg className="h-full w-full -rotate-90" viewBox="0 0 120 120" aria-hidden="true">
+          <circle className="fill-none stroke-black/10 stroke-[10]" cx="60" cy="60" r="42" />
           {segments.map((segment) => {
             if (segment.value <= 0 || total <= 0) {
               return null;
@@ -83,7 +87,7 @@ export function RiskDistributionChart({
 
             return (
               <path
-                className="dashboard-donut__slice"
+                className="fill-none stroke-[10] stroke-linecap-round"
                 d={describeArc(60, 60, 42, startAngle, currentAngle)}
                 key={segment.label}
                 stroke={segment.color}
@@ -91,21 +95,23 @@ export function RiskDistributionChart({
             );
           })}
         </svg>
-        <div className="dashboard-chart__center">
-          <strong>{total}</strong>
-          <span>{totalLabel}</span>
+        <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
+          <strong className="[font-family:'Arial_Black',Impact,Inter,sans-serif] text-4xl font-black leading-none tracking-[-0.05em] text-[#0e0f0c]">
+            {total}
+          </strong>
+          <span className="mt-2 text-sm text-[#454745]">{totalLabel}</span>
         </div>
       </div>
 
-      <div className="dashboard-chart__legend">
+      <div className="grid gap-3">
         {segments.map((segment) => (
-          <div className="dashboard-legend-item" key={segment.label}>
-            <span className="dashboard-legend-item__swatch" style={{ backgroundColor: segment.color }} />
+          <div className="flex items-start justify-between gap-4 rounded-[24px] bg-black/[0.03] px-4 py-3" key={segment.label}>
+            <span className="mt-1 h-3 w-3 rounded-full" style={{ backgroundColor: segment.color }} />
             <div>
-              <strong>{segment.label}</strong>
-              <p>{segment.detail}</p>
+              <strong className="text-sm font-semibold text-[#0e0f0c]">{segment.label}</strong>
+              <p className="mt-1 text-sm leading-6 text-[#454745]">{segment.detail}</p>
             </div>
-            <span>{segment.value}</span>
+            <span className="text-sm font-semibold text-[#0e0f0c]">{segment.value}</span>
           </div>
         ))}
       </div>
@@ -151,19 +157,18 @@ export function ProcessingTrendChart({
   });
 
   return (
-    <div className="dashboard-chart dashboard-chart--trend">
-      <div className="dashboard-trend-chart">
+    <div className={cn(sectionCard, "grid gap-6")}>
+      <div className="overflow-hidden rounded-[30px] bg-black/[0.03] p-4">
         <svg viewBox={`0 0 ${width} ${height}`} aria-hidden="true">
           {[0, 0.5, 1].map((step) => {
             const y = paddingTop + usableHeight * step;
-            return <line className="dashboard-grid-line" key={step} x1={paddingX} x2={width - paddingX} y1={y} y2={y} />;
+            return <line className="stroke-black/10" key={step} x1={paddingX} x2={width - paddingX} y1={y} y2={y} />;
           })}
           {chartPoints.map((seriesItem) => (
             <g key={seriesItem.key}>
-              <path className="dashboard-line" d={seriesItem.path} stroke={seriesItem.color} />
+              <path className="fill-none stroke-[3]" d={seriesItem.path} stroke={seriesItem.color} />
               {seriesItem.values.map((point, index) => (
                 <circle
-                  className="dashboard-line__point"
                   cx={point.x}
                   cy={point.y}
                   fill={seriesItem.color}
@@ -176,17 +181,17 @@ export function ProcessingTrendChart({
         </svg>
       </div>
 
-      <div className="dashboard-trend-footer">
-        <div className="dashboard-trend-legend">
+      <div className="grid gap-4">
+        <div className="flex flex-wrap items-center gap-4">
           {chartPoints.map((seriesItem) => (
-            <div className="dashboard-trend-legend__item" key={seriesItem.key}>
-              <span className="dashboard-trend-legend__swatch" style={{ backgroundColor: seriesItem.color }} />
+            <div className="flex items-center gap-2 text-sm font-semibold text-[#0e0f0c]" key={seriesItem.key}>
+              <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: seriesItem.color }} />
               <strong>{seriesItem.label}</strong>
             </div>
           ))}
         </div>
 
-        <div className="dashboard-trend-labels">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs font-semibold uppercase tracking-[0.12em] text-[#6c7268]">
           {points.map((point) => (
             <span key={point.label}>{point.label}</span>
           ))}
@@ -204,20 +209,20 @@ export function PipelineFunnelChart({
   const maxValue = Math.max(1, ...stages.map((stage) => stage.value));
 
   return (
-    <div className="dashboard-funnel">
+    <div className="grid gap-4">
       {stages.map((stage) => (
-        <article className={`dashboard-funnel-stage dashboard-funnel-stage--${stage.tone}`} key={stage.label}>
-          <div className="dashboard-funnel-stage__header">
-            <strong>{stage.label}</strong>
-            <span>{stage.value}</span>
+        <article className="rounded-[28px] border border-black/10 bg-white/[0.72] p-4" key={stage.label}>
+          <div className="flex items-center justify-between gap-4">
+            <strong className="text-sm font-semibold text-[#0e0f0c]">{stage.label}</strong>
+            <span className="text-sm font-semibold text-[#0e0f0c]">{stage.value}</span>
           </div>
-          <div className="dashboard-funnel-stage__track">
+          <div className="relative mt-3 h-2.5 overflow-hidden rounded-full bg-black/[0.08]">
             <span
-              className={`dashboard-funnel-stage__fill dashboard-funnel-stage__fill--${stage.tone}`}
+              className={progressFillStyles(stage.tone)}
               style={{ width: `${(stage.value / maxValue) * 100}%` }}
             />
           </div>
-          <p>{stage.detail}</p>
+          <p className="mt-3 text-sm leading-6 text-[#454745]">{stage.detail}</p>
         </article>
       ))}
     </div>
