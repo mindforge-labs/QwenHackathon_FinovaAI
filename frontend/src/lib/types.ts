@@ -47,7 +47,13 @@ export type DocumentSummary = {
   mime_type: string;
   document_type: string | null;
   status: DocumentStatus;
+  page_count: number;
   validation_flag_count: number;
+  quality_score: number | null;
+  ocr_confidence: number | null;
+  extraction_confidence: number | null;
+  requires_attention: boolean;
+  review_action_count: number;
   created_at: string;
   updated_at: string;
 };
@@ -58,6 +64,14 @@ export type ApplicationSummary = {
   phone: string | null;
   email: string | null;
   status: ApplicationStatus;
+  document_count: number;
+  processed_document_count: number;
+  flagged_document_count: number;
+  approved_document_count: number;
+  latest_document_updated_at: string | null;
+  next_review_document_id: string | null;
+  next_review_document_file_name: string | null;
+  next_review_document_updated_at: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -66,12 +80,40 @@ export type ApplicationDetail = ApplicationSummary & {
   documents: DocumentSummary[];
 };
 
+export type OCRLine = {
+  text: string;
+  bbox: number[][];
+  confidence: number;
+};
+
 export type DocumentPage = {
   id: string;
   page_number: number;
   raw_image_storage_key: string;
   processed_image_storage_key: string;
   ocr_text: string | null;
+  ocr_confidence: number | null;
+  ocr_lines: OCRLine[];
+};
+
+export type DocumentFieldSignal = {
+  field_name: string;
+  value: unknown;
+  page_number: number | null;
+  bbox: number[][] | null;
+  confidence: number | null;
+  is_flagged: boolean;
+  is_missing: boolean;
+  source: "ocr_line_match" | "derived" | "missing";
+  matched_text: string | null;
+};
+
+export type DocumentTimelineEvent = {
+  code: string;
+  label: string;
+  description: string;
+  tone: "neutral" | "positive" | "warning" | "danger" | "pending";
+  created_at: string | null;
 };
 
 export type DocumentDetail = {
@@ -82,6 +124,7 @@ export type DocumentDetail = {
   storage_key: string;
   document_type: string | null;
   status: DocumentStatus;
+  page_count: number;
   quality_score: number | null;
   ocr_confidence: number | null;
   extraction_confidence: number | null;
@@ -91,6 +134,8 @@ export type DocumentDetail = {
   extraction: ExtractionRecord | null;
   validation_flags: ValidationFlag[];
   review_actions: ReviewAction[];
+  field_signals: DocumentFieldSignal[];
+  timeline: DocumentTimelineEvent[];
 };
 
 export type ApplicationsResponse = {

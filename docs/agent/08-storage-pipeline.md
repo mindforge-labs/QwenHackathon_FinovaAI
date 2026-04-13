@@ -77,12 +77,16 @@ Run PaddleOCR on each page and persist per-page OCR output with:
 - `bbox`
 - confidence score per line or block
 
+The persisted OCR payload should remain structured enough for downstream API responses to expose real review overlays and field-match lookups.
+
 ## Step 5: Aggregate OCR
 
 - combine OCR text across pages
 - preserve page number associations
 - preserve bounding boxes
 - persist raw OCR output as an artifact
+
+Review-facing API payloads may derive field-match signals from these persisted OCR lines, but should not invent synthetic geometry unrelated to stored OCR data.
 
 Aggregate OCR confidence should be derived from PaddleOCR results, for example by averaging line confidence or using a weighted text-based heuristic.
 

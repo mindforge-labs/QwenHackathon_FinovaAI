@@ -38,6 +38,8 @@ Minimum response expectation:
 - application summaries
 - status per application
 - created and updated timestamps
+- dashboard-ready aggregate counters derived from related documents
+- next review candidate metadata when a document is ready or needs attention
 
 ### `GET /applications/{application_id}`
 
@@ -48,6 +50,7 @@ Minimum response expectation:
 - application metadata
 - related documents
 - document status and type summary
+- aggregate counters consistent with `GET /applications`
 - enough data to power the application detail page
 
 ## Documents
@@ -90,6 +93,8 @@ Minimum response expectation:
 - validation flags
 - document status
 - confidence values when available
+- field-level review signals derived from OCR/extraction matches
+- timeline events derived from upload, OCR, extraction, validation, and review history
 
 ### `GET /documents/{document_id}/pages`
 
@@ -100,6 +105,7 @@ Minimum response expectation:
 - page number
 - preview or storage references for raw and processed images
 - OCR availability per page
+- OCR line geometry with `text`, `bbox`, and confidence for real review overlays
 
 ## Review
 

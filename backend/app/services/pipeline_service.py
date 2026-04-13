@@ -17,17 +17,15 @@ from app.repositories.validation_flag_repository import ValidationFlagRepository
 from app.schemas.common import DocumentStatus
 from app.schemas.document import (
     DocumentDetail,
-    DocumentPageMetadata,
     DocumentPagesResponse,
     DocumentProcessResponse,
 )
-from app.schemas.extraction import ExtractionRead
-from app.schemas.review import ReviewActionRead
-from app.schemas.validation import ValidationFlagRead
+from app.services.application_status_service import ApplicationStatusService
 from app.services.classification_service import ClassificationService
 from app.services.extraction_service import ExtractionResult, ExtractionService
 from app.services.ocr_service import OCRService, build_ocr_service
 from app.services.pdf_service import PDFService
+from app.services.presentation_service import build_document_detail, build_page_metadata
 from app.services.preprocess_service import PreprocessService
 from app.services.storage_service import StorageService
 from app.services.validation_service import ValidationService
@@ -52,6 +50,7 @@ class PipelineService:
         self.extracted_field_repository = ExtractedFieldRepository(db)
         self.validation_flag_repository = ValidationFlagRepository(db)
         self.application_repository = ApplicationRepository(db)
+        self.application_status_service = ApplicationStatusService(db)
         self.storage_service = storage_service or StorageService()
         self.pdf_service = pdf_service or PDFService()
         self.preprocess_service = preprocess_service or PreprocessService()
@@ -240,6 +239,7 @@ class PipelineService:
                 },
             )
             self._refresh_cross_document_validation(document.application_id)
+            self.application_status_service.sync(document.application_id)
             self._store_ocr_artifact(
                 application_id=document.application_id,
                 document_id=document.id,
@@ -259,6 +259,7 @@ class PipelineService:
                 document_id,
                 status=DocumentStatus.FAILED.value,
             )
+            self.application_status_service.sync(document.application_id)
             raise
         except Exception as exc:
             logger.exception(
@@ -273,6 +274,7 @@ class PipelineService:
                 document_id,
                 status=DocumentStatus.FAILED.value,
             )
+            self.application_status_service.sync(document.application_id)
             raise ProcessingFailureError("Document processing failed unexpectedly.") from exc
 
         logger.info(
@@ -300,7 +302,7 @@ class PipelineService:
         pages = self.document_page_repository.list_by_document_id(document_id)
         return DocumentPagesResponse(
             document_id=document_id,
-            items=[DocumentPageMetadata.model_validate(page) for page in pages],
+            items=[build_page_metadata(page) for page in pages],
         )
 
     def get_document_detail(self, document_id: str) -> DocumentDetail:
@@ -308,31 +310,7 @@ class PipelineService:
         if document is None:
             raise DocumentNotFoundError(f"Document '{document_id}' was not found.")
 
-        return DocumentDetail(
-            id=document.id,
-            application_id=document.application_id,
-            file_name=document.file_name,
-            mime_type=document.mime_type,
-            storage_key=document.storage_key,
-            document_type=document.document_type,
-            status=DocumentStatus(document.status),
-            page_count=len(document.pages),
-            quality_score=document.quality_score,
-            ocr_confidence=document.ocr_confidence,
-            extraction_confidence=document.extraction_confidence,
-            created_at=document.created_at,
-            updated_at=document.updated_at,
-            pages=[DocumentPageMetadata.model_validate(page) for page in document.pages],
-            extraction=(
-                None
-                if not document.extracted_fields
-                else ExtractionRead.model_validate(document.extracted_fields[0])
-            ),
-            validation_flags=[
-                ValidationFlagRead.model_validate(flag) for flag in document.validation_flags
-            ],
-            review_actions=[ReviewActionRead.model_validate(action) for action in document.review_actions],
-        )
+        return build_document_detail(document)
 
     def get_document_content(self, document_id: str) -> tuple[bytes, str, str]:
         document = self.document_repository.get_by_id(document_id)

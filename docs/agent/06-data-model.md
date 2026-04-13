@@ -69,6 +69,10 @@ Represents a single page or image artifact derived from a document.
 - `ocr_json`
 - `created_at`
 
+Notes:
+
+- `ocr_json` should preserve the OCR line list with `text`, `bbox`, and per-line confidence so review UI can render real overlays instead of guessed hotspots.
+
 ## `extracted_fields`
 
 Stores extraction results.
@@ -104,6 +108,31 @@ Stores human review history.
 - `comment`
 - `corrected_json`
 - `created_at`
+
+## Derived API Read Models
+
+Some review and dashboard payloads are derived from persisted entities rather than stored as standalone tables. These are still part of the canonical data contract for frontend consumption.
+
+### Application aggregates
+
+Expose derived application counters from the related documents:
+
+- `document_count`
+- `processed_document_count`
+- `flagged_document_count`
+- `approved_document_count`
+- `latest_document_updated_at`
+- `next_review_document_id` nullable
+- `next_review_document_file_name` nullable
+- `next_review_document_updated_at` nullable
+
+### Review-facing document enrichments
+
+Expose derived review signals from persisted OCR, extraction, validation, and review history:
+
+- page-level OCR lines with `text`, `bbox`, and confidence
+- field-level review signals with `field_name`, extracted `value`, matched `page_number` nullable, matched `bbox` nullable, derived confidence, and flag state
+- document timeline events derived from upload time, OCR artifacts, extraction records, validation flags, and review actions
 
 ## Status Model
 

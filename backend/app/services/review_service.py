@@ -9,7 +9,7 @@ from app.repositories.application_repository import ApplicationRepository
 from app.repositories.document_repository import DocumentRepository
 from app.repositories.extracted_field_repository import ExtractedFieldRepository
 from app.repositories.review_action_repository import ReviewActionRepository
-from app.schemas.common import ApplicationStatus, DocumentStatus
+from app.schemas.common import DocumentStatus
 from app.schemas.extraction import ExtractionRead
 from app.schemas.review import (
     ReviewActionRead,
@@ -18,6 +18,7 @@ from app.schemas.review import (
     ReviewUpdateRequest,
     ReviewUpdateResponse,
 )
+from app.services.application_status_service import ApplicationStatusService
 from app.services.extraction_service import ExtractionService
 from app.services.validation_service import ValidationService
 
@@ -30,6 +31,7 @@ class ReviewService:
         self.extracted_field_repository = ExtractedFieldRepository(db)
         self.review_action_repository = ReviewActionRepository(db)
         self.application_repository = ApplicationRepository(db)
+        self.application_status_service = ApplicationStatusService(db)
         from app.repositories.validation_flag_repository import ValidationFlagRepository
 
         self.validation_flag_repository = ValidationFlagRepository(db)
@@ -71,7 +73,7 @@ class ReviewService:
         document.status = DocumentStatus.NEEDS_REVIEW.value
         document = self.document_repository.save(document)
         self._refresh_cross_document_validation(document.application_id)
-        self._sync_application_status(document.application_id)
+        self.application_status_service.sync(document.application_id)
 
         logger.info(
             "review update persisted",
@@ -111,7 +113,7 @@ class ReviewService:
             corrected_json=None,
         )
         self._refresh_cross_document_validation(document.application_id)
-        self._sync_application_status(document.application_id)
+        self.application_status_service.sync(document.application_id)
 
         logger.info(
             "review decision persisted",
@@ -139,32 +141,6 @@ class ReviewService:
         if action == "request_reupload":
             return DocumentStatus.NEEDS_REVIEW
         raise ProcessingFailureError(f"Unsupported review action '{action}'.")
-
-    def _sync_application_status(self, application_id: str) -> None:
-        application = self.application_repository.get_by_id(application_id)
-        if application is None:
-            return
-
-        document_statuses = {document.status for document in application.documents}
-        if not document_statuses:
-            application.status = ApplicationStatus.DRAFT.value
-        elif all(status == DocumentStatus.APPROVED.value for status in document_statuses):
-            application.status = ApplicationStatus.APPROVED.value
-        elif any(status == DocumentStatus.REJECTED.value for status in document_statuses):
-            application.status = ApplicationStatus.REJECTED.value
-        elif any(
-            status in {
-                DocumentStatus.NEEDS_REVIEW.value,
-                DocumentStatus.PROCESSED.value,
-                DocumentStatus.APPROVED.value,
-            }
-            for status in document_statuses
-        ):
-            application.status = ApplicationStatus.UNDER_REVIEW.value
-        else:
-            application.status = ApplicationStatus.PROCESSING.value
-
-        self.application_repository.save(application)
 
     def _refresh_cross_document_validation(self, application_id: str) -> None:
         self.document_repository.db.expire_all()
