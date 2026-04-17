@@ -4,6 +4,8 @@ Finova AI is an AI-powered document intelligence platform for loan verification 
 
 The product is designed around a practical intake-to-review flow rather than a generic OCR demo. The goal is to reduce manual verification time while keeping human reviewers in control of the final decision.
 
+![Finova AI Review Console](docs/frontend/Finova%20AI%20Review%20Console%201.png)
+
 ## Why Finova
 
 Loan and KYC workflows are still heavily document-driven. ID cards, payslips, and bank statements often arrive in inconsistent formats and require repetitive manual review before they can support a lending decision.
