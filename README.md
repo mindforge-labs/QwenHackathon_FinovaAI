@@ -1,78 +1,99 @@
 # Finova AI
 
-Finova AI is an AI-powered document intelligence platform designed to automate loan verification and KYC workflows for modern fintech systems.
+Finova AI is an AI-powered document intelligence platform for loan verification and KYC workflows. It helps financial teams turn uploaded customer documents into structured, reviewable, and validated data using OCR, computer vision, and LLM-based extraction.
 
-The platform enables financial institutions to process customer documents such as ID cards, payslips, and bank statements with high accuracy and speed. By combining OCR, computer vision, and large language models, Finova AI transforms unstructured documents into structured, validated data ready for decision-making.
+The product is designed around a practical intake-to-review flow rather than a generic OCR demo. The goal is to reduce manual verification time while keeping human reviewers in control of the final decision.
 
-## 🚀 Key Features
+## Why Finova
 
-- 📄 Intelligent document processing (IDP)
-- 🔍 OCR with layout-aware text extraction
-- 🧠 AI-powered structured data extraction (LLM-based)
-- 🛡️ Validation engine for data consistency and risk flags
-- 📊 Reviewer dashboard for human-in-the-loop verification
-- ☁️ Scalable storage with S3-compatible object storage (MinIO)
+Loan and KYC workflows are still heavily document-driven. ID cards, payslips, and bank statements often arrive in inconsistent formats and require repetitive manual review before they can support a lending decision.
 
-## 🏗️ Tech Stack
+Finova addresses that problem by combining document preprocessing, OCR, structured extraction, validation, and reviewer-facing verification into one platform. The result is a pipeline that is faster than manual handling, but still auditable and operationally trustworthy.
+
+## What The Platform Does
+
+- Accepts customer document uploads for verification workflows
+- Normalizes PDF and image inputs into a consistent page-processing pipeline
+- Uses OCR and computer vision to extract layout-aware text
+- Converts unstructured content into structured JSON fields
+- Runs validation rules to surface inconsistencies and missing information
+- Supports human-in-the-loop review with persisted artifacts and review signals
+
+## Supported Scope
+
+The current MVP scope is intentionally narrow:
+
+- Supported document types:
+  - `id_card`
+  - `payslip`
+  - `bank_statement`
+- Supported file formats:
+  - `.jpg`
+  - `.jpeg`
+  - `.png`
+  - `.pdf`
+- Architecture baseline:
+  - modular monolith
+  - local Docker Compose development
+  - cloud-oriented deployment design on Alibaba Cloud
+
+## Core Tech Stack
 
 - Frontend: Next.js
 - Backend: FastAPI
 - OCR: PaddleOCR
-- Image Processing: OpenCV
-- AI Extraction: LLM (structured JSON output)
+- Image processing: OpenCV
+- Structured extraction: LLM with JSON-only output
 - Database: PostgreSQL
-- Storage: MinIO (S3-compatible)
+- Object storage: MinIO for local development, OSS in cloud architecture views
+- Cloud architecture target: Alibaba Cloud
 
-## ☁️ Cloud Architecture
+## Cloud Architecture
 
-The Alibaba Cloud architecture set is organized as a multi-diagram narrative so each view stays readable and purpose-specific.
+The cloud documentation is organized as a multi-diagram set so each architectural concern can be understood independently without turning one image into a wall of lines.
 
 ### 1. Cloud Overview
 
-High-level view of the production footprint on Alibaba Cloud: edge entry, application tier, worker tier, and core managed services.
+High-level view of the production footprint on Alibaba Cloud, including edge entry, application services, worker tier, and core managed services.
 
 ![Finova Cloud Overview](docs/cloud_architecture/img/01_finova_cloud_overview.png)
 
 ### 2. Async Processing Architecture
 
-Core upload-to-processing path showing how Finova moves from synchronous API calls into asynchronous OCR, extraction, and validation.
+The core processing path from synchronous upload requests into asynchronous OCR, extraction, and validation.
 
 ![Finova Async Processing Architecture](docs/cloud_architecture/img/02_finova_async_processing_architecture.png)
 
 ### 3. Data Storage Architecture
 
-Data placement view for transactional state, raw uploads, page artifacts, OCR outputs, extraction outputs, backup, and encryption boundaries.
+A data placement view covering transactional state, raw uploads, page artifacts, OCR output, extraction artifacts, backup, and encryption boundaries.
 
 ![Finova Data Storage Architecture](docs/cloud_architecture/img/03_finova_data_storage_architecture.png)
 
 ### 4. Security Traffic Flow
 
-North-south request path through DNS, CDN, WAF, Cloud Firewall, public entry, and user-facing runtime.
+The north-south request path through DNS, CDN, WAF, Cloud Firewall, public entry, and user-facing runtime.
 
 ![Finova Security Traffic Flow](docs/cloud_architecture/img/04_finova_security_traffic_flow.png)
 
 ### 5. Security Architecture
 
-Security control view for protected runtime, KMS, Security Center, audit logging, bastion access, and protected data services.
+The security control view for protected runtime, KMS, Security Center, audit logging, bastion access, and protected data services.
 
 ![Finova Security Architecture](docs/cloud_architecture/img/05_finova_security_architecture.png)
 
 ### 6. Deployment Architecture
 
-Build and delivery view covering source control, pipeline, registry, infrastructure orchestration, and deployment targets.
+The build and delivery view covering source control, pipeline, registry, infrastructure orchestration, and deployment targets.
 
 ![Finova Deployment Architecture](docs/cloud_architecture/img/06_finova_deployment_architecture.png)
 
-Architecture sources and render scripts live in [docs/cloud_architecture/script](docs/cloud_architecture/script), and generated images live in [docs/cloud_architecture/img](docs/cloud_architecture/img).
+## Repository Layout
 
-## 🎯 Use Case
+- `frontend/` - Next.js application and review interface
+- `backend/` - FastAPI application, pipeline logic, persistence, and tests
+- `docs/` - architecture assets, agent docs, and supporting project documentation
 
-Finova AI is built to streamline loan application workflows by:
-- reducing manual data entry
-- accelerating document verification
-- improving data accuracy
-- enabling faster credit decisioning
+## Intended Outcome
 
-## 💡 Vision
-
-To become the intelligent infrastructure layer for document-driven financial services.
+Finova AI is built to make document-heavy financial workflows faster, more consistent, and easier to trust. It combines automation with reviewability, so teams can accelerate verification without giving up operational control.
